@@ -1,0 +1,9 @@
+{
+  "name": "ftx-board-log",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ftx-api-ws": "^0.0.6"
+  }
+}
