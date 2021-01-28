@@ -1,9 +1,9 @@
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
-// let board = { asks: new Map(), bids: new Map() };
+let board = { asks: new Map(), bids: new Map() };
 
-export const realtime = (responce: ResponeBook, board: BoardInterface) => {
+export const realtime = (responce: ResponeBook,  board: BoardInterface) => {
     // if (responce['channel'] == 'orderbook') {
     // let board = { asks: new Map(), bids: new Map() };
     // function processBoard(board): BoardInterface {

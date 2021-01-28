@@ -26,5 +26,5 @@ const go = async () => {
 
 // go();
 const obj1 = { 'asks': [[2, 3], [4, 5]], 'bids': [[21, 31], [41, 51]] };
-const [key,value] = Object.entries(obj1);
-console.log('key , value :>> ', key , value);
+const [key, value] = Object.entries(obj1);
+console.log('key , value :>> ', key, value);

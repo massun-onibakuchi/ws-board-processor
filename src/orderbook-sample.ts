@@ -37,7 +37,6 @@ const manager = new BoardManagment() as any;
 // collectData();
 const go = async () => {
     await ftx.connect();
-
     ftx.subscribe('orderbook', 'BTC-PERP');
     // ftx.on('BTC-PERP::orderbook', console.log);
     ftx.on('BTC-PERP::orderbook', responce => realtime(responce, board));
