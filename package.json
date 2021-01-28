@@ -4,6 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "ftx-api-ws": "^0.0.6"
+    "@types/node": "14",
+    "ftx-api-ws": "^0.0.6",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
   }
 }
