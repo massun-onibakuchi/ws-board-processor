@@ -1,7 +1,7 @@
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
-let board = { asks: new Map(), bids: new Map() };
+// let board = { asks: new Map(), bids: new Map() };
 
 export const realtime = (responce: ResponeBook, board: BoardInterface) => {
     // if (responce['channel'] == 'orderbook') {
@@ -71,19 +71,19 @@ export class ReadOrderBook {
         }
         return board;
     }
-    protected updateBoard = (data: ResponeBook, board: BoardInterface): BoardInterface => {
+    protected updateBoard = (data: ResponeBook, /* board: BoardInterface */): BoardInterface => {
         for (const key of Object.keys(data)) {
             if (!(key in ['bids', 'asks'])) return
             for (const [price, size] of data[key]) {
-                if (board[key].has(price)) {
-                    if (size == 0) board[key].delete(price);
-                    else board[key].set(price, size);
+                if (this.board[key].has(price)) {
+                    if (size == 0) this.board[key].delete(price);
+                    else this.board[key].set(price, size);
                 }
                 else if (size > 0) {
-                    board[key].set(price, size);
+                    this.board[key].set(price, size);
                 }
             }
         }
-        return board
+        return this.board
     }
 }
