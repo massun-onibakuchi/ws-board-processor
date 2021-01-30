@@ -11,6 +11,8 @@ const ftx = new BoardManagment() as any;
 const go = async () => {
     await ftx.ws.connect();
     ftx.ws.subscribe('orderbook', 'BTC-PERP');
+    ftx.ws.subscribe('trades', 'BTC-PERP');
+    ftx.ws.on('BTC-PERP::trades', console.log);
     ftx.ws.on('BTC-PERP::orderbook', (res: ResponeBook) => ftx.realtime(res));
     // if you passed api credentials:
     ftx.ws.subscribe('fills');
