@@ -14,7 +14,7 @@ export class BoardManagment {
             this.board = this.reformatBoard(responce);
         }
         if (responce['action'] == 'update') {
-            this.board = this.updateBoard(responce);
+            this.updateBoard(responce);
         }
         console.log('board :>> ', this.board);
     }
@@ -34,7 +34,9 @@ export class BoardManagment {
             if (!(key in ['bids', 'asks'])) continue;
             for (const [price, size] of data[key]) {
                 if (this.board[key].has(price)) {
-                    if (size == 0) this.board[key].delete(price);
+                    if (size == 0) {
+                        this.board[key].delete(price);
+                    }
                     else this.board[key].set(price, size);
                 }
                 else if (size > 0) {
@@ -44,5 +46,6 @@ export class BoardManagment {
         }
         return this.board
     }
+    public writeToCSV
 
 }
