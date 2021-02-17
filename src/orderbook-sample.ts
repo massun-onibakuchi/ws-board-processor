@@ -44,9 +44,24 @@ class Analyze {
             }
         }
     }
-    public calculateDiffBoard(updatedBoard, board)
-    public calculateDiffBoard(prevBoard, currentboard) {
-
+    public calculateDiffBoard(updatedBoard: ResponeBook, currentBoard: BoardInterface)
+    public calculateDiffBoard(prevBoard: BoardInterface, currentBoard: BoardInterface)
+    public calculateDiffBoard(board: any,currentBoard: BoardInterface) {
+        // updatedBoard
+        for (const key of Object.keys(board)) {
+            if (!(key in ['bids', 'asks'])) continue;
+            for (const [price, size] of board[key]) {
+                if (currentBoard[key].has(price)) {
+                    if (size == 0) {
+                        currentBoard[key].delete(price);
+                    }
+                    else currentBoard[key].set(price, size);
+                }
+                else if (size > 0) {
+                    currentBoard[key].set(price, size);
+                }
+            }
+        }
     }
 }
 const path = './orderbook.csv'

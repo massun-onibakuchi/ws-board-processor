@@ -1,4 +1,3 @@
-import { json } from 'express';
 import FTXWs from 'ftx-api-ws';
 
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
