@@ -15,30 +15,62 @@ class Analyze {
     constructor() {
 
     }
-    priceBandWidth = 150
-    public calculateDepth(borad: BoardInterface) {
+    boardWidth = 100
+    public calculateDepth(board: BoardInterface) {
+        let bidDepth = 0
+        let askDepth = 0
+        for (const size of board.bids.values()) {
+            bidDepth += size
+        }
+        for (const size of board.bids.values()) {
+            askDepth += size
+        }
+    }
+    public calculateMarketOrder(orders, interval) {
+        const timestamp = Date.now();
+        // let bidsSize = 0;
+        // let asksSize = 0;
+        let liquidation = { timestamp: 0, buy: 0, sell: 0 }
+        let marketOrders = { bidsSize: 0, asksSize: 0 }
+        liquidation.timestamp = timestamp
+        for (const ord of orders) {
+            if (ord.liquidation) {
+                if (ord.side == "buy")
+                    liquidation.buy += ord.size;
+                else liquidation.sell += ord.size;
+            }
+            if (ord.side == "buy") {
+                marketOrders.asksSize += ord.size
+            }
+            if (ord.side == "sell") {
+                marketOrders.bidsSize += ord.size
+            }
+        }
+    }
+    public calculateDiffLimitOrder(prevBoard, currentboard) {
 
     }
 }
 // only public channels:
 const path = './orderbook.csv'
 const ftx = new BoardManagment() as any;
-const stream =  createWriteStream(path)
+// const stream = createWriteStream(path)
+
 const go = async () => {
     await ftx.ws.connect();
     ftx.ws.subscribe('orderbook', 'BTC-PERP');
     // ftx.ws.on('BTC-PERP::orderbook', console.log);
     // ftx.ws.on('BTC-PERP::orderbook', (res: ResponeBook) => ftx.realtime(res));
-    for await (const event of on(ftx.ws, "BTC-PERP::orderbook")) {
-        ftx.realtime(event[0])
-        await sleep(100)
-    }
+    // for await (const event of on(ftx.ws, "BTC-PERP::orderbook")) {
+    //     ftx.realtime(event[0])
+
+    // }
 
     ftx.ws.subscribe('trades', 'BTC-PERP');
     // ftx.ws.on('BTC-PERP::trades', console.log);
     for await (const event of on(ftx.ws, "BTC-PERP::trades")) {
         console.log('event :>> ', event)
-        await sleep(100)
+
     }
 
     // ftx.ws.subscribe('market', 'BTC-PERP');
