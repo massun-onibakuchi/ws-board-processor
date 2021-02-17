@@ -26,13 +26,10 @@ class Analyze {
             askDepth += size
         }
     }
-    public calculateMarketOrder(orders, interval) {
+    public calculateMarketOrder(orders) {
         const timestamp = Date.now();
-        // let bidsSize = 0;
-        // let asksSize = 0;
-        let liquidation = { timestamp: 0, buy: 0, sell: 0 }
-        let marketOrders = { bidsSize: 0, asksSize: 0 }
-        liquidation.timestamp = timestamp
+        let liquidation = { timestamp: timestamp, buy: 0, sell: 0 }
+        let marketOrders = { timestamp: timestamp, buySize: 0, sellSize: 0 }
         for (const ord of orders) {
             if (ord.liquidation) {
                 if (ord.side == "buy")
@@ -40,18 +37,18 @@ class Analyze {
                 else liquidation.sell += ord.size;
             }
             if (ord.side == "buy") {
-                marketOrders.asksSize += ord.size
+                marketOrders.buySize += ord.size
             }
             if (ord.side == "sell") {
-                marketOrders.bidsSize += ord.size
+                marketOrders.sellSize += ord.size
             }
         }
     }
-    public calculateDiffLimitOrder(prevBoard, currentboard) {
+    public calculateDiffBoard(updatedBoard, board)
+    public calculateDiffBoard(prevBoard, currentboard) {
 
     }
 }
-// only public channels:
 const path = './orderbook.csv'
 const ftx = new BoardManagment() as any;
 // const stream = createWriteStream(path)
@@ -61,10 +58,9 @@ const go = async () => {
     ftx.ws.subscribe('orderbook', 'BTC-PERP');
     // ftx.ws.on('BTC-PERP::orderbook', console.log);
     // ftx.ws.on('BTC-PERP::orderbook', (res: ResponeBook) => ftx.realtime(res));
-    // for await (const event of on(ftx.ws, "BTC-PERP::orderbook")) {
-    //     ftx.realtime(event[0])
-
-    // }
+    for await (const event of on(ftx.ws, "BTC-PERP::orderbook")) {
+        ftx.realtime(event[0])
+    }
 
     ftx.ws.subscribe('trades', 'BTC-PERP');
     // ftx.ws.on('BTC-PERP::trades', console.log);

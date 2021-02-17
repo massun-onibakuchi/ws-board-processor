@@ -1,10 +1,12 @@
+import { json } from 'express';
 import FTXWs from 'ftx-api-ws';
 
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
 export class BoardManagment {
-    board: any;
+    board: BoardInterface;
+    prevBoard: BoardInterface;
     ws: FTXWs;
     constructor(config = {}) {
         this.ws = new FTXWs(config);
@@ -16,6 +18,7 @@ export class BoardManagment {
         if (responce['action'] == 'update') {
             this.updateBoard(responce);
         }
+        this.prevBoard = { bids: new Map([...this.board.bids]), asks: new Map([...this.board.asks]) };
         console.log('board :>> ', this.board);
     }
     protected reformatBoard = (data: ResponeBook): BoardInterface => {
