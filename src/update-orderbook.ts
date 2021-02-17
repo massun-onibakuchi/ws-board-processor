@@ -3,14 +3,15 @@ import FTXWs from 'ftx-api-ws';
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
-class Base {}
+class Base { }
 
-export class BoardManagment extends Base{
+export class BoardManagment {
     board: BoardInterface;
     prevBoard: BoardInterface;
     ws: FTXWs;
-    constructor(config = {}) {
-        super();
+    vervose: boolean
+    constructor(config = {}, vervose = false) {
+        this.vervose = vervose
         this.ws = new FTXWs(config);
     }
     public realtime = (responce: ResponeBook) => {
@@ -21,7 +22,6 @@ export class BoardManagment extends Base{
             this.updateBoard(responce);
         }
         this.prevBoard = { bids: new Map([...this.board.bids]), asks: new Map([...this.board.asks]) };
-        console.log('board :>> ', this.board);
     }
     protected reformatBoard = (data: ResponeBook): BoardInterface => {
         const board: BoardInterface = { asks: new Map(), bids: new Map() };
@@ -36,7 +36,7 @@ export class BoardManagment extends Base{
     }
     protected updateBoard = (data: ResponeBook): BoardInterface => {
         for (const key of Object.keys(data)) {
-            if (!(key in ['bids', 'asks'])) continue;
+            if (!(key == 'bids' || key == 'asks')) continue;
             for (const [price, size] of data[key]) {
                 if (this.board[key].has(price)) {
                     if (size == 0) {
