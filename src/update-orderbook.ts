@@ -3,7 +3,6 @@ import FTXWs from 'ftx-api-ws';
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
-class Base { }
 
 export class BoardManagment {
     board: BoardInterface;

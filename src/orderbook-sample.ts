@@ -1,8 +1,10 @@
-import { BoardInterface, ResponeBook, BoardManagment } from './update-orderbook';
-import { on } from 'events'
+import * as cluster from "cluster";
+import { on, once } from 'events'
 import { createWriteStream } from 'fs'
 import { Logic } from './analysis';
+import { cpus } from "os";
 
+const numCPUs = cpus().length
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // including private channels:
@@ -13,10 +15,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 // })
 
 const path = './orderbook.csv'
-// const ftx = new BoardManagment() as any
 const ftx = new Logic() as any;
 // const stream = createWriteStream(path)
+// const ftx = new BoardManagment() as any
 
+// if (cluster.isMaster) {
+//     for (var i = 0; i < numCPUs; i++) {
+//         // Create a worker
+//         cluster.fork();
+//     }
+// }
 const go = async () => {
     await ftx.ws.connect();
     ftx.ws.subscribe('orderbook', 'BTC-PERP');
@@ -28,12 +36,12 @@ const go = async () => {
         // ftx.realtime(event[0])
     }
 
-    // ftx.ws.subscribe('trades', 'BTC-PERP');
-    // // ftx.ws.on('BTC-PERP::trades', console.log);
-    // for await (const event of on(ftx.ws, "BTC-PERP::trades")) {
-    //     console.log('event :>> ', event)
+    ftx.ws.subscribe('trades', 'BTC-PERP');
+    // ftx.ws.on('BTC-PERP::trades', console.log);
+    for await (const event of on(ftx.ws, "BTC-PERP::trades")) {
+        console.log('event :>> ', event)
+    }
 
-    // }
 
     // ftx.ws.subscribe('market', 'BTC-PERP');
     // ftx.ws.on('BTC-PERP::market', console.log);

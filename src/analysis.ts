@@ -2,7 +2,7 @@ import { BoardInterface, ResponeBook, BoardManagment } from './update-orderbook'
 
 export class Logic extends BoardManagment {
     boardWidth = 100
-    maxLength = 30
+    maxLength
     interval;
     nextUpdate = Date.now();
     depths = [{ timestamp: this.nextUpdate, bids: 0, asks: 0 }]
@@ -10,20 +10,23 @@ export class Logic extends BoardManagment {
     liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
     diffBoard = [{ timestamp: this.nextUpdate, asks: 0, bids: 0 }];
     timer;
-    constructor(interval = 10, maxLength = 30, apiConfig = {}, vervose = false) {
+    constructor(interval = 10000, maxLength = 30, apiConfig = {}, vervose = false) {
         super(apiConfig, vervose);
         this.interval = interval;
         this.maxLength = maxLength;
+        this.nextUpdate = Date.now() + interval;
         this.timer = setInterval(() => this.update(), 2000);
     }
     public boardAnalysis = (responce: ResponeBook) => {
-        this.calculateDiffBoard(this.board, null, responce)
-        this.realtime(responce);
-        this.calculateDepth(this.board);
+        this.calculateDiffBoard(this.board, null, responce);
+        setImmediate(() => this.realtime(responce));
+        setImmediate(() => this.calculateDepth(this.board));
+        // this.realtime(responce);
+        // this.calculateDepth(this.board);
     }
     public update() {
-        console.log("===================================");
         if (this.nextUpdate > Date.now()) return
+        console.log("===================================");
         const lasttime = this.nextUpdate;
         this.nextUpdate += this.interval;
         this.depths.push({ timestamp: lasttime, bids: 0, asks: 0 });
