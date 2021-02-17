@@ -44,24 +44,39 @@ class Analyze {
             }
         }
     }
-    public calculateDiffBoard(updatedBoard: ResponeBook, currentBoard: BoardInterface)
-    public calculateDiffBoard(prevBoard: BoardInterface, currentBoard: BoardInterface)
-    public calculateDiffBoard(board: any,currentBoard: BoardInterface) {
-        // updatedBoard
+    public calculateDiffBoard(prevBoard: BoardInterface, currentBoard?: BoardInterface, updatedBoard?: ResponeBook) {
+        let diff = { asks: 0, bids: 0 };
+        let board: { bids: Iterable<Iterable<number>>, asks: Iterable<Iterable<number>>, [extra: string]: any };
+        if (currentBoard?.asks instanceof Map) {
+            board = currentBoard;
+            board.asks = [...board.asks]
+            board.bids = [...board.bids]
+        } else {
+            board = updatedBoard;
+        }
+        if (!board) return console.log("CAN NOT CALCULATE DIFF BOARD")
         for (const key of Object.keys(board)) {
             if (!(key in ['bids', 'asks'])) continue;
-            for (const [price, size] of board[key]) {
-                if (currentBoard[key].has(price)) {
-                    if (size == 0) {
-                        currentBoard[key].delete(price);
-                    }
-                    else currentBoard[key].set(price, size);
+            board[key].forEach(([price, size],) => {
+                if (prevBoard[key].has(price)) {
+                    diff[key] += size - prevBoard[key].get(price)
                 }
                 else if (size > 0) {
-                    currentBoard[key].set(price, size);
+                    diff[key] += size
                 }
-            }
+            });
         }
+        // for (const key of Object.keys(board)) {
+        //     if (!(key in ['bids', 'asks'])) continue;
+        //     board[key].forEach((size: number, price: number) => {
+        //         if (prevBoard[key].has(price)) {
+        //             diff[key] += size - prevBoard[key].get(price)
+        //         }
+        //         else if (size > 0) {
+        //             diff[key] += size
+        //         }
+        //     });
+        // }
     }
 }
 const path = './orderbook.csv'
@@ -74,7 +89,8 @@ const go = async () => {
     // ftx.ws.on('BTC-PERP::orderbook', console.log);
     // ftx.ws.on('BTC-PERP::orderbook', (res: ResponeBook) => ftx.realtime(res));
     for await (const event of on(ftx.ws, "BTC-PERP::orderbook")) {
-        ftx.realtime(event[0])
+        // ftx.realtime(event[0])
+        console.log('event :>> ', event[0].bids, event[0].asks);
     }
 
     ftx.ws.subscribe('trades', 'BTC-PERP');
