@@ -3,11 +3,14 @@ import FTXWs from 'ftx-api-ws';
 export interface BoardInterface { asks: Map<number, number>, bids: Map<number, number> };
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 
-export class BoardManagment {
+class Base {}
+
+export class BoardManagment extends Base{
     board: BoardInterface;
     prevBoard: BoardInterface;
     ws: FTXWs;
     constructor(config = {}) {
+        super();
         this.ws = new FTXWs(config);
     }
     public realtime = (responce: ResponeBook) => {
@@ -48,6 +51,5 @@ export class BoardManagment {
         }
         return this.board
     }
-    public writeToCSV
 
 }
