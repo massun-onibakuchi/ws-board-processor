@@ -1,14 +1,13 @@
 import * as cluster from 'cluster';
-import { BoardManagment } from "./update-orderbook";
+import FTXWs from "ftx-api-ws"
 import { on } from "events"
 
-const ftx = new BoardManagment();
-const ws = async (ftx) => {
-    await ftx.ws.connect();
-    let queue = [];
-    ftx.ws.subscribe('trades', 'BTC-PERP');
-    // ftx.ws.on('BTC-PERP::trades', (res) => setTimeout(console.log, 0, res));
-    for await (const event of on(ftx.ws, "BTC-PERP::trades")) {
+const ws = new FTXWs() as any;
+const go = async (ws) => {
+    await ws.connect();
+    ws.subscribe('trades', 'BTC-PERP');
+    // ws.on('BTC-PERP::trades', (res) => setTimeout(console.log, 0, res));
+    for await (const event of on(ws, "BTC-PERP::trades")) {
         // console.log('event :>> ', event);
         process.send(event)
         // queue.push(event)
@@ -21,9 +20,9 @@ const ws = async (ftx) => {
     });
     // process.exit(0)
     // setInterval(() => {
-        // process.send(queue)
+    // process.send(queue)
     // }, 2000)
 }
 if (cluster.worker && process.env.WorkerName == "worker2") {
-    ws(ftx);
+    go(ws);
 }

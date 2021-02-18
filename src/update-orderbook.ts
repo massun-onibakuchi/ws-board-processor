@@ -11,7 +11,7 @@ export class BoardManagment {
     vervose: boolean
     constructor(config = {}, vervose = false) {
         this.vervose = vervose
-        this.ws = new FTXWs(config);
+        // this.ws = new FTXWs(config);
     }
     public realtime = (responce: ResponeBook) => {
         if (responce['action'] == 'partial') {
@@ -20,7 +20,7 @@ export class BoardManagment {
         if (responce['action'] == 'update') {
             this.updateBoard(responce);
         }
-        this.prevBoard = { bids: new Map([...this.board.bids]), asks: new Map([...this.board.asks]) };
+        // this.prevBoard = { bids: new Map([...this.board.bids]), asks: new Map([...this.board.asks]) };
     }
     protected reformatBoard = (data: ResponeBook): BoardInterface => {
         const board: BoardInterface = { asks: new Map(), bids: new Map() };
