@@ -1,7 +1,7 @@
-import { BoardInterface, ResponeBook, BoardManagment, ResponceMarkerOrder } from './update-orderbook';
+import { BoardInterface, ResponeBook, BoardUpdater, ResponceMarkerOrder } from './update-orderbook';
 
 
-export class Logic extends BoardManagment {
+export class BoardProcessor extends BoardUpdater {
     boardWidth = 100
     maxLength
     interval;

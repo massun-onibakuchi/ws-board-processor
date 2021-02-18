@@ -1,11 +1,7 @@
 import * as cluster from "cluster";
-import { on, once } from 'events'
-import { cpus } from "os";
 import * as path from "path";
-import { Logic } from "./analysis";
+import { BoardProcessor } from "./analysis";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
-const numCPUs = cpus().length
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 if (!cluster.isMaster) process.exit(0)
 
@@ -30,9 +26,9 @@ const worker2 = cluster.fork({ WorkerName: "worker2" })
 worker1.on('message', (res: ResponeBook) => orderbookQueue.push(res));
 worker2.on('message', (res: ResponceMarkerOrder[]) => marketOrderQueue.push(res));
 
-const logic = new Logic();
+const logic = new BoardProcessor();
 
-const processBook = (queue: any[], logic: Logic, vervose = false) => {
+const processBook = (queue: any[], logic: BoardProcessor, vervose = false) => {
     console.log('orderbookQueue.length:', queue.length);
     for (const res of queue) {
         vervose && console.log('book :>> ', res);
@@ -40,7 +36,7 @@ const processBook = (queue: any[], logic: Logic, vervose = false) => {
     }
     queue.splice(0, queue.length)
 }
-const processMarketOrders = (queue: any[], logic: Logic, vervose = false) => {
+const processMarketOrders = (queue: any[], logic: BoardProcessor, vervose = false) => {
     console.log('marketOrderQueue.length:', queue.length);
     for (const res of queue) {
         vervose && console.log('market orders :>> ', res);
@@ -50,4 +46,4 @@ const processMarketOrders = (queue: any[], logic: Logic, vervose = false) => {
 }
 // setInterval(() => processBook(orderbookQueue, logic, false), 500)
 const timerBook = setInterval(() => processBook(orderbookQueue, logic), 300)
-const timerMarketOrder = setInterval(() => processMarketOrders(marketOrderQueue, logic), 400)
+const timerMarketOrder = setInterval(() => processMarketOrders(marketOrderQueue, logic), 500)

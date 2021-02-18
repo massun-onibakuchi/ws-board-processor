@@ -4,7 +4,7 @@ export interface BoardInterface { asks: Map<number, number>, bids: Map<number, n
 export interface ResponeBook { asks: number[][], bids: number[][], action: 'partial' | 'update', timestamp: number };
 export interface ResponceMarkerOrder { id: number, price: number, size: number, side: 'sell' | 'buy', liquidation: boolean, time: string }
 
-export class BoardManagment {
+export class BoardUpdater {
     board: BoardInterface;
     prevBoard: BoardInterface;
     ws: FTXWs;

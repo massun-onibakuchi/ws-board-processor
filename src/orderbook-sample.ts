@@ -1,11 +1,9 @@
 import * as cluster from "cluster";
 import { on, once } from 'events'
 import { createWriteStream } from 'fs'
-import { Logic } from './analysis';
-import { cpus } from "os";
+import { BoardProcessor } from './analysis';
 
-const numCPUs = cpus().length
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // including private channels:
 // const ftx = new FTXWs({
@@ -15,16 +13,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 // })
 
 const path = './orderbook.csv'
-const ftx = new Logic() as any;
+const ftx = new BoardProcessor() as any;
 // const stream = createWriteStream(path)
 // const ftx = new BoardManagment() as any
 
-// if (cluster.isMaster) {
-//     for (var i = 0; i < numCPUs; i++) {
-//         // Create a worker
-//         cluster.fork();
-//     }
-// }
 const go = async () => {
     const queue = []
     await ftx.ws.connect();
