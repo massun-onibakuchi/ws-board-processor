@@ -2,6 +2,8 @@ import * as cluster from 'cluster';
 import FTXWs from "ftx-api-ws"
 import { on } from "events"
 
+if (cluster.worker && process.env.WorkerName != "worker2") process.exit(0)
+
 const ws = new FTXWs() as any;
 const go = async (ws) => {
     await ws.connect();
@@ -12,17 +14,6 @@ const go = async (ws) => {
         process.send(event[0])
         // queue.push(event)
     }
-    process.on('message', (msg) => {
-        console.log('msg [worker]:>> ', msg);
-        if (msg == 'shutdown') {
-            process.exit(0)
-        }
-    });
-    // process.exit(0)
-    // setInterval(() => {
-    // process.send(queue)
-    // }, 2000)
 }
-if (cluster.worker && process.env.WorkerName == "worker2") {
-    go(ws);
-}
+
+go(ws);
