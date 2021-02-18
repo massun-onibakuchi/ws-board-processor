@@ -45,6 +45,7 @@ export class Logic extends BoardManagment {
         console.log('this.depths :>> ', this.depths);
     }
     public calculateDepth(board: BoardInterface) {
+        if (!board) return console.log('[WARN]: BOARD_IS_NOT_FOUND', board);
         const depth = { timestamp: 0, bids: 0, asks: 0 }
         for (const key of Object.keys(depth)) {
             if (!(key == 'bids' || key == 'asks')) continue;

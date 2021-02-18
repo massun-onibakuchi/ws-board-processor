@@ -24,12 +24,12 @@ const worker2 = cluster.fork({ WorkerName: "worker2" })
 //     if (worker == worker1) worker1 = cluster.fork({ WorkerName: "worker1" });
 //     if (worker == worker2) worker2 = cluster.fork({ WorkerName: "worker2" });
 // });
-worker1.on('message', (res) => orderbookQueue.push(res));
-worker2.on('message', (res) => marketOrderQueue.push(res));
+worker1.on('message', orderbookQueue.push);
+worker2.on('message', marketOrderQueue.push);
 
 const logic = new Logic();
 
-const processBook = (queue, logic, vervose = true) => {
+const processBook = (queue, logic: Logic, vervose = true) => {
     // if (queue.length > 2) {
     // }
     for (const res of queue) {
