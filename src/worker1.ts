@@ -13,7 +13,7 @@ if (cluster.worker && process.env.WorkerName == "worker1") {
         for await (const event of on(ws, "BTC-PERP::orderbook")) {
             // ftx.boardAnalysis(event[0]);
             // console.log('bids :>> ', event[0].bids,/*  'events[0].asks :>> ',event[0].asks */);
-            process.send(event)
+            process.send(event[0])
             // ftx.realtime(event[0])
         }
         // ftx.ws.subscribe('trades', 'BTC-PERP');

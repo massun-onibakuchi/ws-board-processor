@@ -9,7 +9,7 @@ const go = async (ws) => {
     // ws.on('BTC-PERP::trades', (res) => setTimeout(console.log, 0, res));
     for await (const event of on(ws, "BTC-PERP::trades")) {
         // console.log('event :>> ', event);
-        process.send(event)
+        process.send(event[0])
         // queue.push(event)
     }
     process.on('message', (msg) => {

@@ -1,4 +1,4 @@
-import { BoardInterface, ResponeBook, BoardManagment } from './update-orderbook';
+import { BoardInterface, ResponeBook, BoardManagment, ResponceMarkerOrder } from './update-orderbook';
 
 
 export class Logic extends BoardManagment {
@@ -19,11 +19,14 @@ export class Logic extends BoardManagment {
         this.timer = setInterval(() => this.update(), 2000);
     }
     public boardAnalysis = (responce: ResponeBook) => {
+        if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_', responce);
         this.board && this.calculateDiffBoard(this.board, null, responce);
         setImmediate(() => this.realtime(responce));
         setImmediate(() => this.calculateDepth(this.board));
-        // this.realtime(responce);
-        // this.calculateDepth(this.board);
+    }
+    public marketOrderAnalysis = (responce: ResponceMarkerOrder[]) => {
+        if (!responce) return console.log('[WARN] at marketOrderAnalysis:RESPONCE_IS_', responce);
+        setImmediate(() => this.calculateMarketOrder(responce));
     }
     public update() {
         if (this.nextUpdate > Date.now()) return
@@ -43,6 +46,8 @@ export class Logic extends BoardManagment {
         }
         console.log('this.diffBoard :>> ', this.diffBoard);
         console.log('this.depths :>> ', this.depths);
+        console.log('this.marketOrders :>> ', this.marketOrders);
+        console.log('this.liquidations :>> ', this.liquidations);
     }
     public calculateDepth(board: BoardInterface) {
         if (!board) return console.log('[WARN]: BOARD_IS_NOT_FOUND', board);
@@ -56,7 +61,7 @@ export class Logic extends BoardManagment {
         this.depths[this.depths.length - 1]['bids'] += depth['bids']
         this.depths[this.depths.length - 1]['asks'] += depth['asks']
     }
-    public calculateMarketOrder(orders) {
+    public calculateMarketOrder(orders: ResponceMarkerOrder[]) {
         const liq = this.liquidations[this.liquidations.length - 1]
         const morders = this.marketOrders[this.marketOrders.length - 1]
         for (const ord of orders) {
@@ -79,12 +84,13 @@ export class Logic extends BoardManagment {
         // const diff = this.diffBoard[this.diffBoard.length - 1]
         const diff = { timestamp: 0, asks: 0, bids: 0 };
         let board: { bids: IterableIterator<[number, number]> | number[][], asks: IterableIterator<[number, number]> | number[][], [extra: string]: any };
-        if (currentBoard instanceof Array) {
-            board = updateData;
-        } else if (currentBoard?.asks instanceof Map) {
+        if (currentBoard?.asks instanceof Map) {
             board = { bids: currentBoard.bids.entries(), asks: currentBoard.asks.entries() };
         }
-        if (!board || !prevBoard) return console.log("[WARN]: CAN_NOT_CALCULATE_DIFF_BOARD")
+        else if (updateData) {
+            board = updateData;
+        }
+        if (!board || !prevBoard) return console.log("[WARN]: CAN_NOT_CALCULATE_DIFF_BOARD", board)
         for (const key of Object.keys(board)) {
             if (!(key == 'bids' || key == 'asks')) continue;
             for (const [price, size] of board[key]) {

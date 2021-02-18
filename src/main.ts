@@ -3,6 +3,7 @@ import { on, once } from 'events'
 import { cpus } from "os";
 import * as path from "path";
 import { Logic } from "./analysis";
+import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 const numCPUs = cpus().length
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -10,6 +11,7 @@ if (!cluster.isMaster) process.exit(0)
 
 const orderbookQueue = [];
 const marketOrderQueue = [];
+
 cluster.setupMaster({
     exec: path.join(process.cwd(), 'src/worker1.ts'),
 });
@@ -24,28 +26,28 @@ const worker2 = cluster.fork({ WorkerName: "worker2" })
 //     if (worker == worker1) worker1 = cluster.fork({ WorkerName: "worker1" });
 //     if (worker == worker2) worker2 = cluster.fork({ WorkerName: "worker2" });
 // });
-worker1.on('message', orderbookQueue.push);
-worker2.on('message', marketOrderQueue.push);
+
+worker1.on('message', (res: ResponeBook) => orderbookQueue.push(res));
+worker2.on('message', (res: ResponceMarkerOrder[]) => marketOrderQueue.push(res));
 
 const logic = new Logic();
 
-const processBook = (queue, logic: Logic, vervose = true) => {
-    // if (queue.length > 2) {
-    // }
+const processBook = (queue: any[], logic: Logic, vervose = false) => {
+    console.log('orderbookQueue.length:', queue.length);
     for (const res of queue) {
-        // vervose && console.log('book :>> ', res);
-        console.log('logic.board :>> ', logic.board);
+        vervose && console.log('book :>> ', res);
         logic.boardAnalysis(res)
     }
+    queue.splice(0, queue.length)
 }
-const processMarketOrders = (queue, logic, vervose = true) => {
-    // if (queue.length > 2) {
-    // }
+const processMarketOrders = (queue: any[], logic: Logic, vervose = false) => {
+    console.log('marketOrderQueue.length:', queue.length);
     for (const res of queue) {
         vervose && console.log('market orders :>> ', res);
-        logic.marketOrdersAnalysis(res)
+        logic.marketOrderAnalysis(res)
     }
+    queue.splice(0, queue.length)
 }
-setInterval(() => processBook(orderbookQueue, logic), 1800)
-// const timerBook = setInterval(() => processBook(orderbookQueue, logic), 300)
-// const timerMarketOrder = setInterval(() => processBook(marketOrderQueue, logic), 300)
+// setInterval(() => processBook(orderbookQueue, logic, false), 500)
+const timerBook = setInterval(() => processBook(orderbookQueue, logic), 300)
+const timerMarketOrder = setInterval(() => processMarketOrders(marketOrderQueue, logic), 400)
