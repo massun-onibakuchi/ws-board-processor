@@ -15,7 +15,7 @@ parentPort.on('message', (msg) => {
 });
 
 
-const processBook = (queue: any[], logic: BoardProcessor, vervose = false) => {
+const processBook = (queue: ResponeBook[], logic: BoardProcessor, vervose = false) => {
     if (vervose) {
         console.log('orderbookQueue.length:', queue.length);
         console.log('book :>> ', queue);
@@ -25,7 +25,7 @@ const processBook = (queue: any[], logic: BoardProcessor, vervose = false) => {
     }
     queue.splice(0, queue.length)
 }
-const processMarketOrders = (queue: any[], logic: BoardProcessor, vervose = false) => {
+const processMarketOrders = (queue: any, logic: BoardProcessor, vervose = false) => {
     if (vervose) {
         console.log('marketOrderQueue.length:', queue.length);
         console.log('market orders :>> ', queue);

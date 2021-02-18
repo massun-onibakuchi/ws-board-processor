@@ -1,5 +1,5 @@
 import * as cluster from "cluster";
-import { isMainThread, Worker } from "worker_threads";
+import { Worker } from "worker_threads";
 import * as path from "path";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 

@@ -19,13 +19,13 @@ export class BoardProcessor extends BoardUpdater {
         this.timer = setInterval(() => this.update(), 2000);
     }
     public boardAnalysis = (responce: ResponeBook) => {
-        if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_', responce);
+        if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
         this.board && this.calculateDiffBoard(this.board, null, responce);
         setImmediate(() => this.realtime(responce));
         setImmediate(() => this.calculateDepth(this.board));
     }
     public marketOrderAnalysis = (responce: ResponceMarkerOrder[]) => {
-        if (!responce) return console.log('[WARN] at marketOrderAnalysis:RESPONCE_IS_', responce);
+        if (!responce) return console.log('[WARN] at marketOrderAnalysis:RESPONCE_IS_INVALID', responce);
         setImmediate(() => this.calculateMarketOrder(responce));
     }
     public update() {
