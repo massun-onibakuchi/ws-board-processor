@@ -2,7 +2,6 @@ import * as cluster from 'cluster';
 import FTXWs from "ftx-api-ws"
 import { on } from "events"
 
-if (cluster.worker && process.env.WorkerName != "worker2") process.exit(0)
 
 const ws = new FTXWs() as any;
 const go = async (ws) => {
