@@ -15,7 +15,6 @@ parentPort.on('message', (msg) => {
         marketOrderQueue.push(msg.data)
 });
 
-
 const processBook = (queue: ResponeBook[], logic: BoardProcessor, vervose = false) => {
     if (vervose) {
         console.log('orderbookQueue.length:', queue.length);
