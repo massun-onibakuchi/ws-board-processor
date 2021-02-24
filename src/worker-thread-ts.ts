@@ -5,7 +5,8 @@ import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 const orderbookQueue = [];
 const marketOrderQueue = [];
 
-const logic = new BoardProcessor();
+const filePath = 'result-from' + new Date(Date.now()).toISOString()+'.csv';
+const logic = new BoardProcessor(filePath);
 
 parentPort.on('message', (msg) => {
     if (msg.channel === 'orderbook')

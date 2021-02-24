@@ -50,7 +50,9 @@ const request = async (exchange, target, data?, market?) => {
     }
 }
 
-(async () => {
-    const res = await request('ftx', 'orderbook', { depth: 20 })
-    console.log('res :>> ', res);
-})()
+if (require.main === module) {
+    (async () => {
+        const res = await request('ftx', 'orderbook', { depth: 20 })
+        console.log('res :>> ', res);
+    })()
+}

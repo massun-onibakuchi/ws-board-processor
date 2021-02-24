@@ -5,9 +5,9 @@ import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 
 if (!cluster.isMaster) process.exit(0)
 
-const thread_worker = new Worker(path.join(process.cwd(), 'src/worker_thread.js'), {
+const thread_worker = new Worker(path.join(process.cwd(), 'src/worker-thread.js'), {
     workerData: {
-        path: path.join(process.cwd(), 'src/worker_thread.ts')
+        path: path.join(process.cwd(), 'src/worker-thread-ts.ts')
     }
 });
 
