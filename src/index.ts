@@ -20,29 +20,31 @@ thread_worker.on('error', async (err) => {
 })
 
 
-if (cpus().length <= 2) {
-    console.log('ERROR: cpu core <= 2');
+if (cpus().length >= 2) {
+    cluster.setupMaster({
+        exec: path.join(process.cwd(), 'src/subscribe.ts'),
+    });
+    const worker1 = cluster.fork({ WorkerName: "worker1", target: "orderbook" });
+
+    cluster.setupMaster({
+        exec: path.join(process.cwd(), 'src/subscribe.ts'),
+    });
+    const worker2 = cluster.fork({ WorkerName: "worker2", target: "trades" })
+
+    worker1.on('message', (res: ResponeBook) => thread_worker.postMessage({ channel: 'orderbook', data: res }));
+    worker2.on('message', (res: ResponceMarkerOrder[]) => thread_worker.postMessage({ channel: 'trades', data: res }));
+} else {
+    console.log('ERROR: cpu core < 2');
     process.exit(1);
 }
 
-cluster.setupMaster({
-    exec: path.join(process.cwd(), 'src/subscribe.ts'),
-});
-const worker1 = cluster.fork({ WorkerName: "worker1", target: "orderbook" });
-
-cluster.setupMaster({
-    exec: path.join(process.cwd(), 'src/subscribe.ts'),
-});
-const worker2 = cluster.fork({ WorkerName: "worker2", target: "trades" })
-
-worker1.on('message', (res: ResponeBook) => thread_worker.postMessage({ channel: 'orderbook', data: res }));
-worker2.on('message', (res: ResponceMarkerOrder[]) => thread_worker.postMessage({ channel: 'trades', data: res }));
-
-
-/** version-2 subscribe-2.ts */
+/** version-2 subscribe-2.ts this does not work..*/
 // cluster.setupMaster({
 //     exec: path.join(process.cwd(), 'src/subscribe-2.ts'),
 // });
 // const worker1 = cluster.fork();
 
-// worker1.on('message', (res: any) => thread_worker.postMessage(res));
+// worker1.on('message', (res: any) => {
+//     const msg = { channel: res instanceof Array ? 'trades' : 'orderbook', data: res };
+//     thread_worker.postMessage(msg);
+// });

@@ -9,15 +9,15 @@ const ws = new FTXWs();
 console.log('[Info]: subscribe... MARKET', MARKET);
 const go = async (ws) => {
     await ws.connect();
-    
+
     ws.subscribe('orderbook', MARKET);
     for await (const event of on(ws, MARKET + "::orderbook")) {
-        process.send({ channel: 'orderbook', data: event[0] })
+        process.send(event[0])
     }
-    
+
     ws.subscribe('trades', MARKET);
     for await (const event of on(ws, MARKET + "::trades")) {
-        process.send({ channel: 'trades', data: event[0] })
+        process.send(event[0])
     }
 }
 
