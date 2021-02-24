@@ -4,6 +4,7 @@ import * as path from "path";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 import { cpus } from "os";
 
+
 if (!cluster.isMaster) process.exit(0)
 
 const thread_worker = new Worker(path.join(process.cwd(), 'src/board-process.js'), {
@@ -18,30 +19,30 @@ thread_worker.on('error', async (err) => {
     console.log('code :>> ', code);
 })
 
-cluster.on("exit", (worker, code, signal) => {
-    console.log('worker %d died (%s). restarting...',
-        worker.process.pid, signal || code);
-});
 
-process.on('SIGINT', (worker1, worker2) => closeCluster([worker1, worker2]));
-
-if (cpus().length >= 2) {
-    cluster.setupMaster({
-        exec: path.join(process.cwd(), 'src/subscribe.ts'),
-    });
-    const worker1 = cluster.fork({ WorkerName: "worker1", target: "orderbook" });
-    cluster.setupMaster({
-        exec: path.join(process.cwd(), 'src/subscribe.ts'),
-    });
-    const worker2 = cluster.fork({ WorkerName: "worker2", target: "trades" })
-    worker1.on('message', (res: ResponeBook) => thread_worker.postMessage({ channel: 'orderbook', data: res }));
-    worker2.on('message', (res: ResponceMarkerOrder[]) => thread_worker.postMessage({ channel: 'marketOrder', data: res }));
-} else throw Error('CLUSTERING_ERROR')
-
-const closeCluster = (workers) => {
-    console.log('Master stopped');
-    for (const worker of workers) {
-        worker.destroy('SIGTERM');
-    }
-    process.exit(0);
+if (cpus().length <= 2) {
+    console.log('ERROR: cpu core <= 2');
+    process.exit(1);
 }
+
+cluster.setupMaster({
+    exec: path.join(process.cwd(), 'src/subscribe.ts'),
+});
+const worker1 = cluster.fork({ WorkerName: "worker1", target: "orderbook" });
+
+cluster.setupMaster({
+    exec: path.join(process.cwd(), 'src/subscribe.ts'),
+});
+const worker2 = cluster.fork({ WorkerName: "worker2", target: "trades" })
+
+worker1.on('message', (res: ResponeBook) => thread_worker.postMessage({ channel: 'orderbook', data: res }));
+worker2.on('message', (res: ResponceMarkerOrder[]) => thread_worker.postMessage({ channel: 'trades', data: res }));
+
+
+/** version-2 subscribe-2.ts */
+// cluster.setupMaster({
+//     exec: path.join(process.cwd(), 'src/subscribe-2.ts'),
+// });
+// const worker1 = cluster.fork();
+
+// worker1.on('message', (res: any) => thread_worker.postMessage(res));

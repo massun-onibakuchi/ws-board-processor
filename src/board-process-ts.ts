@@ -1,18 +1,22 @@
+import config from 'config';
 import { parentPort } from "worker_threads";
 import { BoardProcessor } from "./analysis";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 
 const orderbookQueue = [];
-const marketOrderQueue = [];
+const trades = [];
+const INTERVAL = config.get<number>('INTERVAL');
+const MAX_RESERVE = config.get<number>('MAX_RESERVE');
+const VERVOSE = config.get<boolean>('VERVOSE');
 
-const filePath = 'result-from' + new Date(Date.now()).toISOString()+'.csv';
-const logic = new BoardProcessor(filePath);
+const filePath = 'result-from' + new Date(Date.now()).toISOString() + '.csv';
+const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE, VERVOSE);
 
 parentPort.on('message', (msg) => {
     if (msg.channel === 'orderbook')
         orderbookQueue.push(msg.data)
-    if (msg.channel === 'marketOrder')
-        marketOrderQueue.push(msg.data)
+    if (msg.channel === 'trades')
+        trades.push(msg.data)
 });
 
 const processBook = (queue: ResponeBook[], logic: BoardProcessor, vervose = false) => {
@@ -37,4 +41,4 @@ const processMarketOrders = (queue: any, logic: BoardProcessor, vervose = false)
 }
 // setInterval(() => processBook(orderbookQueue, logic, false), 500)
 const timerBook = setInterval(() => processBook(orderbookQueue, logic), 300)
-const timerMarketOrder = setInterval(() => processMarketOrders(marketOrderQueue, logic), 500)
+const timerMarketOrder = setInterval(() => processMarketOrders(trades, logic), 500)
