@@ -29,7 +29,8 @@ export class BoardProcessor extends BoardUpdater {
     }
     public boardAnalysis = (responce: ResponeBook) => {
         if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
-        this.board && this.calculateDiffBoard(this.board, null, responce);
+        /** 板の差分はリアルタイムに必要ない場合は，後で前後の板の厚さの差で求められる */
+        // this.board && this.calculateDiffBoard(this.board, null, responce);
         setImmediate(() => this.realtime(responce));
         setImmediate(() => this.calculateDepth(this.board));
         setImmediate(() => this.recordPrice(this.board));
