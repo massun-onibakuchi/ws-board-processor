@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 export class StreamRecord {
-    index0 = 'date,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell\n'
+    index0 = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell\n'
     stream: fs.WriteStream;
     constructor(filePath: fs.PathLike, csvIndex?: string) {
         csvIndex && (this.index0 = csvIndex)

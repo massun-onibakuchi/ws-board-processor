@@ -13,13 +13,17 @@ export class BoardProcessor extends BoardUpdater {
     diffBoard = [{ timestamp: this.nextUpdate, asks: 0, bids: 0 }];
     timer;
     streamRecord: StreamRecord;
-    constructor(fileName: PathLike, interval = 10000, maxLength = 10, vervose = false) {
+    constructor(filePath: PathLike, interval = 10000, maxLength = 10, vervose = false) {
         super(null, vervose);
         this.interval = interval;
         this.maxLength = maxLength;
         this.nextUpdate = Date.now() + interval;
         this.timer = setInterval(() => this.update(), 2000);
-        this.streamRecord = new StreamRecord(fileName)
+        this.streamRecord = new StreamRecord(filePath);
+        console.log('[Info]:Set up...' +
+            '\ndata collecting interval: ' + interval +
+            '\nfile path: ' + filePath
+        );
     }
     public boardAnalysis = (responce: ResponeBook) => {
         if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
@@ -42,9 +46,9 @@ export class BoardProcessor extends BoardUpdater {
         this.diffBoard.push({ timestamp: lasttime, asks: 0, bids: 0 })
 
         const length = this.depths.length;
-        if (length > 3) {
+        if (length > 2) {
             console.log('[Info]:  Writing result...');
-            const chunk = new Date(this.nextUpdate).toISOString() + ',' +
+            const chunk = this.nextUpdate + ',' +
                 this.depths[length - 2].asks + ',' +
                 this.depths[length - 2].bids + ',' +
                 this.diffBoard[length - 2].asks + ',' +
