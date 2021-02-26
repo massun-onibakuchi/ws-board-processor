@@ -9,27 +9,30 @@ export class BoardProcessor extends BoardUpdater {
     nextUpdate = Date.now();
     depths = [{ timestamp: this.nextUpdate, bids: 0, asks: 0 }]
     marketOrders = [{ timestamp: this.nextUpdate, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 }]
-    // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
+    ohlcvs = [{ timestamp: this.nextUpdate, close: 0, open: 0, high: 0, low: 0 }];
     diffBoard = [{ timestamp: this.nextUpdate, asks: 0, bids: 0 }];
+    // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
     timer;
     streamRecord: StreamRecord;
+    csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell,open,high,low,close\n';
     constructor(filePath: PathLike, interval = 10000, maxLength = 10, vervose = false) {
         super(null, vervose);
-        this.interval = interval;
-        this.maxLength = maxLength;
-        this.nextUpdate = Date.now() + interval;
-        this.timer = setInterval(() => this.update(), 2000);
-        this.streamRecord = new StreamRecord(filePath);
         console.log('[Info]:Set up...' +
             '\ndata collecting interval: ' + interval +
-            '\nfile path: ' + filePath
+            '\ncsv file path: ' + filePath
         );
+        this.interval = interval;
+        this.maxLength = maxLength > 3 ? maxLength : 10;
+        this.nextUpdate = Date.now() + 60000 - (Date.now() % 60000) + interval;
+        this.timer = setInterval(() => this.update(), 2000);
+        this.streamRecord = new StreamRecord(filePath, this.csvIndex);
     }
     public boardAnalysis = (responce: ResponeBook) => {
         if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
         this.board && this.calculateDiffBoard(this.board, null, responce);
         setImmediate(() => this.realtime(responce));
         setImmediate(() => this.calculateDepth(this.board));
+        setImmediate(() => this.recordPrice(this.board));
     }
     public marketOrderAnalysis = (responce: ResponceMarkerOrder[]) => {
         if (!responce) return console.log('[WARN] at marketOrderAnalysis:RESPONCE_IS_INVALID', responce);
@@ -40,10 +43,16 @@ export class BoardProcessor extends BoardUpdater {
         console.log("-------------------------");
         const lasttime = this.nextUpdate;
         this.nextUpdate += this.interval;
+
+        const bestPricesLength = this.ohlcvs.length;
+        const bestAsk = Math.max(...this.board.asks.keys());
+        this.ohlcvs[bestPricesLength - 1].close = bestAsk
+
+        this.ohlcvs.push({ timestamp: lasttime, open: bestAsk, close: 0, high: 0, low: 0 });
         this.depths.push({ timestamp: lasttime, bids: 0, asks: 0 });
         this.marketOrders.push({ timestamp: lasttime, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 })
-        // this.liquidations.push({ timestamp: lasttime, buy: 0, sell: 0 })
         this.diffBoard.push({ timestamp: lasttime, asks: 0, bids: 0 })
+        // this.liquidations.push({ timestamp: lasttime, buy: 0, sell: 0 })
 
         const length = this.depths.length;
         if (length > 2) {
@@ -56,20 +65,37 @@ export class BoardProcessor extends BoardUpdater {
                 this.marketOrders[length - 2].buy + ',' +
                 this.marketOrders[length - 2].sell + ',' +
                 this.marketOrders[length - 2].liqBuy + ',' +
-                this.marketOrders[length - 2].liqSell + '\n';
+                this.marketOrders[length - 2].liqSell + ',' +
+                this.ohlcvs[length - 2].open + ',' +
+                this.ohlcvs[length - 2].high + ',' +
+                this.ohlcvs[length - 2].low + ',' +
+                this.ohlcvs[length - 2].close + '\n';
             this.streamRecord.write(chunk);
         }
         /** slice data to  the max length */
         if (length > this.maxLength) {
-            this.depths.splice(0, this.maxLength - length)
-            this.marketOrders.splice(0, this.maxLength - this.marketOrders.length)
+            console.log('[Info]: cut off some old data...');
+            this.depths = this.depths.splice(0, length - this.maxLength);
+            this.diffBoard = this.diffBoard.splice(0, this.diffBoard.length - this.maxLength);
+            this.marketOrders = this.marketOrders.splice(0, this.marketOrders.length - this.maxLength);
+            this.ohlcvs = this.ohlcvs.splice(0, this.marketOrders.length - this.maxLength);
             // this.liquidations.splice(0, this.maxLength - this.liquidations.length)
-            this.diffBoard.splice(0, this.maxLength - this.diffBoard.length)
         }
         console.log('this.diffBoard :>> ', this.diffBoard);
         console.log('this.depths :>> ', this.depths);
         console.log('this.marketOrders :>> ', this.marketOrders);
-        // console.log('this.liquidations :>> ', this.liquidations);
+        console.log('this.ohlcvs :>> ', this.ohlcvs);
+    }
+
+    public recordPrice(board: BoardInterface) {
+        const high = Math.max(...board.asks.keys());
+        const low = Math.max(...board.bids.keys());
+        const lastData = this.ohlcvs[this.ohlcvs.length - 1];
+
+        lastData.high = Math.max(high, lastData.high);
+        lastData.low = lastData.low ? Math.min(low, lastData.low) : low;
+        // override 
+        this.ohlcvs[this.ohlcvs.length - 1] = lastData
     }
     public calculateDepth(board: BoardInterface) {
         if (!board) return console.log('[WARN]: BOARD_IS_NOT_FOUND', board);
@@ -126,16 +152,5 @@ export class BoardProcessor extends BoardUpdater {
         }
         this.diffBoard[this.diffBoard.length - 1].asks += diff.asks;
         this.diffBoard[this.diffBoard.length - 1].bids += diff.bids;
-        // for (const key of Object.keys(board)) {
-        //     if (!(key in ['bids', 'asks'])) continue;
-        //     board[key].forEach((size: number, price: number) => {
-        //         if (prevBoard[key].has(price)) {
-        //             diff[key] += size - prevBoard[key].get(price)
-        //         }
-        //         else if (size > 0) {
-        //             diff[key] += size
-        //         }
-        //     });
-        // }
     }
 }

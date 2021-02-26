@@ -1,10 +1,10 @@
 import fs from 'fs';
 
 export class StreamRecord {
-    index0 = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell\n'
+    index0;
     stream: fs.WriteStream;
-    constructor(filePath: fs.PathLike, csvIndex?: string) {
-        csvIndex && (this.index0 = csvIndex)
+    constructor(filePath: fs.PathLike, csvIndex: string) {
+        this.index0 = csvIndex
         if (fs.existsSync(filePath)) console.log(`path:${filePath} exists`);
         else {
             this.stream = fs.createWriteStream(filePath, { encoding: 'utf8' });
