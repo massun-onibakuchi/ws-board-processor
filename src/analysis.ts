@@ -12,7 +12,7 @@ export class BoardProcessor extends BoardUpdater {
     ohlcvs = [{ timestamp: this.nextUpdate, close: 0, open: 0, high: 0, low: 0 }];
     diffBoard = [{ timestamp: this.nextUpdate, asks: 0, bids: 0 }];
     // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
-    timer;
+    timer: NodeJS.Timeout;
     streamRecord: StreamRecord;
     csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell,open,high,low,close\n';
     constructor(filePath: PathLike, interval = 10000, maxLength = 10, vervose = false) {
@@ -72,13 +72,13 @@ export class BoardProcessor extends BoardUpdater {
                 this.ohlcvs[length - 2].close + '\n';
             this.streamRecord.write(chunk);
         }
-        /** slice data to  the max length */
+        /** leave the last `this.maxLength` element */
         if (length > this.maxLength) {
             console.log('[Info]: cut off some old data...');
-            this.depths = this.depths.splice(0, length - this.maxLength);
-            this.diffBoard = this.diffBoard.splice(0, this.diffBoard.length - this.maxLength);
-            this.marketOrders = this.marketOrders.splice(0, this.marketOrders.length - this.maxLength);
-            this.ohlcvs = this.ohlcvs.splice(0, this.marketOrders.length - this.maxLength);
+            this.depths = this.depths.splice(-this.maxLength);
+            this.diffBoard = this.diffBoard.splice(-this.maxLength);
+            this.marketOrders = this.marketOrders.splice(-this.maxLength);
+            this.ohlcvs = this.ohlcvs.splice(-this.maxLength);
             // this.liquidations.splice(0, this.maxLength - this.liquidations.length)
         }
         console.log('this.diffBoard :>> ', this.diffBoard);
