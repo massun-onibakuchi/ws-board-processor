@@ -5,11 +5,12 @@ import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 
 const orderbookQueue = [];
 const trades = [];
-const INTERVAL = process.env.INTERVAL || config.get<number>('INTERVAL'); 
+const MARKET = process.env.MARKET || config.get<number>('MARKET');
+const INTERVAL = process.env.INTERVAL || config.get<number>('INTERVAL');
 const MAX_RESERVE = config.get<number>('MAX_RESERVE');
 const VERVOSE = config.get<boolean>('VERVOSE');
+const filePath = `result-${MARKET}:${new Date(Date.now()).toISOString()}.csv`;
 
-const filePath = 'result-from' + new Date(Date.now()).toISOString() + '.csv';
 const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE, VERVOSE);
 
 parentPort.on('message', (msg) => {

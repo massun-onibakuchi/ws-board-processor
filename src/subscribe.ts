@@ -2,7 +2,7 @@ import config from 'config';
 import FTXWs from "ftx-api-ws"
 import { on } from 'events'
 
-const MARKET = config.get('MARKET');
+const MARKET = process.env.MARKET || config.get('MARKET');
 const TARGET = process.env.target;
 const ws = new FTXWs();
 

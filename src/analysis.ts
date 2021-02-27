@@ -14,7 +14,7 @@ export class BoardProcessor extends BoardUpdater {
     // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
     timer: NodeJS.Timeout;
     streamRecord: StreamRecord;
-    csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,marketBuy,marketSell,liqBuy,liqSell,open,high,low,close\n';
+    csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,open,high,low,close\n';
     constructor(filePath: PathLike, interval = 10000, maxLength = 10, vervose = false) {
         super(null, vervose);
         console.log('[Info]:Set up...' +
