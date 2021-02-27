@@ -15,8 +15,8 @@ export class BoardProcessor extends BoardUpdater {
     timer: NodeJS.Timeout;
     streamRecord: StreamRecord;
     csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,open,high,low,close\n';
-    constructor(filePath: PathLike, interval = 10000, maxLength = 10, vervose = false) {
-        super(null, vervose);
+    constructor(filePath: PathLike, interval = 10000, maxLength = 10) {
+        super(null);
         console.log('[Info]:Set up...' +
             '\ndata collecting interval: ' + interval +
             '\ncsv file path: ' + filePath
@@ -24,6 +24,10 @@ export class BoardProcessor extends BoardUpdater {
         this.interval = interval;
         this.maxLength = maxLength > 3 ? maxLength : 10;
         this.nextUpdate = Date.now() + 60000 - (Date.now() % 60000) + interval;
+        if (this.nextUpdate < Date.now()) {
+            console.log('[ERROR]: next_update_time < now.');
+            this.nextUpdate += this.interval;
+        }
         this.timer = setInterval(() => this.update(), 2000);
         this.streamRecord = new StreamRecord(filePath, this.csvIndex);
     }

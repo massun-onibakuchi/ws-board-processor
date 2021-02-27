@@ -8,9 +8,7 @@ export class BoardUpdater {
     board: BoardInterface;
     prevBoard: BoardInterface;
     ws: FTXWs;
-    vervose: boolean
-    constructor(config = {}, vervose = false) {
-        this.vervose = vervose
+    constructor(config = {}) {
         // this.ws = new FTXWs(config);
     }
     public realtime = (responce: ResponeBook) => {

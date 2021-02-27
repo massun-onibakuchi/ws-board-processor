@@ -11,7 +11,7 @@ const MAX_RESERVE = config.get<number>('MAX_RESERVE');
 const VERVOSE = config.get<boolean>('VERVOSE');
 const filePath = `result-${MARKET}:${new Date(Date.now()).toISOString()}.csv`;
 
-const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE, VERVOSE);
+const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE);
 
 parentPort.on('message', (msg) => {
     if (msg.channel === 'orderbook')
@@ -41,5 +41,5 @@ const processMarketOrders = (queue: any, logic: BoardProcessor, vervose = false)
     queue.splice(0, queue.length)
 }
 // setInterval(() => processBook(orderbookQueue, logic, false), 500)
-const timerBook = setInterval(() => processBook(orderbookQueue, logic), 300)
-const timerMarketOrder = setInterval(() => processMarketOrders(trades, logic), 500)
+const timerBook = setInterval(() => processBook(orderbookQueue, logic, VERVOSE), 300)
+const timerMarketOrder = setInterval(() => processMarketOrders(trades, logic, VERVOSE), 500)

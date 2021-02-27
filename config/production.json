@@ -2,5 +2,5 @@
     "MARKET": "BTC-PERP",
     "INTERVAL": 60000,
     "MAX_RESERVE": 10,
-    "VERVOSE": true
+    "VERVOSE": false
 }
