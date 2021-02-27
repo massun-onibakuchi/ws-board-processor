@@ -5,7 +5,7 @@ import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 
 const orderbookQueue = [];
 const trades = [];
-const INTERVAL = config.get<number>('INTERVAL');
+const INTERVAL = process.env.INTERVAL || config.get<number>('INTERVAL'); 
 const MAX_RESERVE = config.get<number>('MAX_RESERVE');
 const VERVOSE = config.get<boolean>('VERVOSE');
 

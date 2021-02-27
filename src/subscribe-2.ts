@@ -3,7 +3,7 @@ import config from 'config';
 import FTXWs from "ftx-api-ws"
 import { on } from 'events'
 
-const MARKET = config.get('MARKET');
+const MARKET = process.env.MARKERT || config.get('MARKET');
 
 const ws = new FTXWs();
 console.log('[Info]: subscribe... MARKET', MARKET);
