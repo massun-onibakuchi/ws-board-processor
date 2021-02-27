@@ -18,6 +18,7 @@ export class BoardProcessor extends BoardUpdater {
     constructor(filePath: PathLike, interval = 10000, maxLength = 10) {
         super(null);
         console.log('[Info]:Set up...' +
+            process.env.NODE_ENV +
             '\ndata collecting interval: ' + interval +
             '\ncsv file path: ' + filePath
         );

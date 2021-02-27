@@ -3,12 +3,12 @@ import { parentPort } from "worker_threads";
 import { BoardProcessor } from "./analysis";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
 
-const orderbookQueue = [];
-const trades = [];
-const MARKET = process.env.MARKET || config.get<number>('MARKET');
-const INTERVAL = process.env.INTERVAL || config.get<number>('INTERVAL');
-const MAX_RESERVE = config.get<number>('MAX_RESERVE');
-const VERVOSE = config.get<boolean>('VERVOSE');
+const orderbookQueue: ResponeBook[] = [];
+const trades: ResponceMarkerOrder[][] = [];
+const MARKET: string = process.env.MARKET || config.get<number>('MARKET');
+const INTERVAL: number = parseInt(process.env.INTERVAL) || config.get<number>('INTERVAL');
+const MAX_RESERVE: number = config.get<number>('MAX_RESERVE');
+const VERVOSE: boolean = config.get<boolean>('VERVOSE');
 const filePath = `result-${MARKET}:${new Date(Date.now()).toISOString()}.csv`;
 
 const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE);
@@ -30,7 +30,7 @@ const processBook = (queue: ResponeBook[], logic: BoardProcessor, vervose = fals
     }
     queue.splice(0, queue.length)
 }
-const processMarketOrders = (queue: any, logic: BoardProcessor, vervose = false) => {
+const processMarketOrders = (queue: ResponceMarkerOrder[][], logic: BoardProcessor, vervose = false) => {
     if (vervose) {
         console.log('marketOrderQueue.length:', queue.length);
         console.log('market orders :>> ', queue);
