@@ -22,13 +22,7 @@ cluster.setupMaster({
     exec: path.join(process.cwd(), 'src/subscribe.ts'),
 });
 const worker1 = cluster.fork({ target: "orderbook" });
-
-cluster.setupMaster({
-    exec: path.join(process.cwd(), 'src/subscribe.ts'),
-});
 const worker2 = cluster.fork({ target: "trades" })
 
 worker1.on('message', (res: ResponeBook) => setTimeout(() => logic.boardAnalysis(res), 0));
 worker2.on('message', (res: ResponceMarkerOrder[]) => setTimeout(() => logic.marketOrderAnalysis(res), 0));
-// worker1.on('message', (res: ResponeBook) => orderbookQueue.push(res));
-// worker2.on('message', (res: ResponceMarkerOrder[]) => trades.push(res));
