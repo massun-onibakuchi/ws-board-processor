@@ -1,50 +1,27 @@
 import * as cluster from "cluster";
-import { Worker } from "worker_threads";
-import * as path from "path";
+import path from "path";
+import config from 'config';
+import { BoardProcessor } from "./analysis";
 import { ResponceMarkerOrder, ResponeBook } from "./update-orderbook";
-import { cpus } from "os";
+import { cpus } from 'os';
 
-
-if (!cluster.isMaster) process.exit(0)
-
-const thread_worker = new Worker(path.join(process.cwd(), 'src/board-process.js'), {
-    workerData: {
-        path: path.join(process.cwd(), 'src/board-process-ts.ts')
-    }
-});
-
-thread_worker.on('error', async (err) => {
-    console.log('err :>> ', err);
-    const code = await thread_worker.terminate();
-    console.log('code :>> ', code);
-})
-
-
-if (cpus().length >= 2) {
-    cluster.setupMaster({
-        exec: path.join(process.cwd(), 'src/subscribe.ts'),
-    });
-    const worker1 = cluster.fork({ WorkerName: "worker1", target: "orderbook" });
-
-    cluster.setupMaster({
-        exec: path.join(process.cwd(), 'src/subscribe.ts'),
-    });
-    const worker2 = cluster.fork({ WorkerName: "worker2", target: "trades" })
-
-    worker1.on('message', (res: ResponeBook) => thread_worker.postMessage({ channel: 'orderbook', data: res }));
-    worker2.on('message', (res: ResponceMarkerOrder[]) => thread_worker.postMessage({ channel: 'trades', data: res }));
-} else {
+if (cpus().length < 2) {
     console.log('ERROR: cpu core < 2');
     process.exit(1);
 }
 
-/** version-2 subscribe-2.ts this does not work..*/
-// cluster.setupMaster({
-//     exec: path.join(process.cwd(), 'src/subscribe-2.ts'),
-// });
-// const worker1 = cluster.fork();
+const MARKET: string = process.env.MARKET || config.get<string>('MARKET');
+const INTERVAL: number = parseInt(process.env.INTERVAL) || config.get<number>('INTERVAL');
+const MAX_RESERVE: number = config.get<number>('MAX_RESERVE');
+const filePath = `result_${MARKET}_${INTERVAL}_${new Date(Date.now()).toISOString().replace(/\....Z/,'')}.csv`;
 
-// worker1.on('message', (res: any) => {
-//     const msg = { channel: res instanceof Array ? 'trades' : 'orderbook', data: res };
-//     thread_worker.postMessage(msg);
-// });
+const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE);
+
+cluster.setupMaster({
+    exec: path.join(process.cwd(), 'src/subscribe.ts'),
+});
+const worker1 = cluster.fork({ target: "orderbook" });
+const worker2 = cluster.fork({ target: "trades" })
+
+worker1.on('message', (res: ResponeBook) => setTimeout(() => logic.boardAnalysis(res), 0));
+worker2.on('message', (res: ResponceMarkerOrder[]) => setTimeout(() => logic.marketOrderAnalysis(res), 0));
