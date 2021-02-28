@@ -51,10 +51,10 @@ export class BoardProcessor extends BoardUpdater {
         this.nextUpdate += this.interval;
 
         const bestPricesLength = this.ohlcvs.length;
-        const bestAsk = Math.max(...this.board.asks.keys());
-        this.ohlcvs[bestPricesLength - 1].close = bestAsk
+        const bestPrice = (Math.min(...this.board.bids.keys()) + Math.max(...this.board.asks.keys())) / 2;
+        this.ohlcvs[bestPricesLength - 1].close = bestPrice
 
-        this.ohlcvs.push({ timestamp: lasttime, open: bestAsk, close: 0, high: 0, low: 0 });
+        this.ohlcvs.push({ timestamp: lasttime, open: bestPrice, close: 0, high: 0, low: 0 });
         this.depths.push({ timestamp: lasttime, bids: 0, asks: 0 });
         this.marketOrders.push({ timestamp: lasttime, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 })
         this.diffBoard.push({ timestamp: lasttime, asks: 0, bids: 0 })
@@ -94,12 +94,12 @@ export class BoardProcessor extends BoardUpdater {
     }
 
     public recordPrice(board: BoardInterface) {
-        const high = Math.max(...board.asks.keys());
-        const low = Math.min(...board.bids.keys());
+        const high = Math.min(...board.bids.keys());
+        const low = Math.max(...board.asks.keys());
         const lastData = this.ohlcvs[this.ohlcvs.length - 1];
 
         lastData.high = Math.max(high, lastData.high);
-        lastData.low = lastData.low ? Math.min(low, lastData.low) : low;
+        lastData.low = lastData.low > 0 ? Math.min(low, lastData.low) : low;
         // override 
         this.ohlcvs[this.ohlcvs.length - 1] = lastData
     }
