@@ -30,29 +30,21 @@ export class FTX {
         const query = data || {}
         const req = this.setRequest(targetPath, 'GET', query)
         console.log('req :>> ', req);
-        return await axios(req)//.then(r => r.data);
+        return await axios(req).then(r => r.data);
     }
     trades = async (market = this.market, query?: { limit: number, start_time: number, end_time: number }) => {
         const targetPath = path.join('markets/', market, '/trades')
         const data = Object.keys(query).reduce((prev, current,) => query[current] && (prev[current] = query[current]), {})
         const req = this.setRequest(targetPath, 'GET', data)
-        return await axios(req)//.then(r => r.data);
+        return await axios(req).then(r => r.data);
     }
 }
 
-const ftx = new FTX('ETH-PERP', {})
-const request = async (exchange, target, data?, market?) => {
-    try {
-        if (exchange === 'ftx')
-            return await ftx.request(target, market, data);
-    } catch (e) {
-        console.log('e :>> ', e.message);
-    }
-}
 
 if (require.main === module) {
     (async () => {
-        const res = await request('ftx', 'orderbook', { depth: 20 })
+        const ftx = new FTX('ETH-PERP', {})
+        const res = await ftx.orderbook('BTC-PERP',{ depth: 20 })
         console.log('res :>> ', res);
     })()
 }

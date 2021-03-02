@@ -68,7 +68,9 @@
   "include": [
     "./src",
   ],
-  // "exclude": [],
+  "exclude": [
+    "./src/scraping/**"
+  ],
   // "files": [
   //   "src/index.ts"
   // ]
