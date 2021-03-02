@@ -1,42 +1,37 @@
-import * as path from 'path';
-import * as querystring from 'querystring';
 import axios from 'axios';
 
 export class FTX {
-    END_POINT = 'https://ftx.com/api';
+    URLS = { REST: 'https://ftx.com/api' };
     market: string
+    config
     constructor(market = 'BTC-PERP', config = {}) {
         this.market = market;
+        this.config = config;
     }
-    request = async (target, market = this.market, data?) => {
-        if (target === 'orderbook')
-            return this.orderbook(market, data);
-        if (target === 'trades')
-            return this.trades(market, data);
-    }
-    setRequest = (targetPath, method, data = {}) => {
+    setRequest = (targetPath: string, method: string, data = null) => {
         const request = {};
         if (method === 'GET') {
-            let url = path.join(this.END_POINT, targetPath)
-            if (data)
-                url = url + '?' + querystring.stringify(data)
+            const url = "".concat(this.URLS['REST'], targetPath);
             request['method'] = 'GET';
             request['url'] = url;
+            request['params'] = data;
         }
         return request
     }
-    orderbook = async (market = this.market, data?: { depth: number }) => {
-        const targetPath = path.join('markets/', market, '/orderbook')
-        const query = data || {}
-        const req = this.setRequest(targetPath, 'GET', query)
-        console.log('req :>> ', req);
-        return await axios(req).then(r => r.data);
+    orderbook = async (market = this.market, depth = 20) => {
+        const targetPath = "".concat('/markets/', market, '/orderbook')
+        const req = this.setRequest(targetPath, 'GET', { depth: depth })
+        return await axios(req).then(r => r.data.result);
     }
-    trades = async (market = this.market, query?: { limit: number, start_time: number, end_time: number }) => {
-        const targetPath = path.join('markets/', market, '/trades')
-        const data = Object.keys(query).reduce((prev, current,) => query[current] && (prev[current] = query[current]), {})
-        const req = this.setRequest(targetPath, 'GET', data)
-        return await axios(req).then(r => r.data);
+    trades = async (market = this.market, limit = 20, startTime?: number, endTime?: number) => {
+        const targetPath = "".concat('/markets/', market, '/trades')
+        const params = { limit: limit }
+        if (startTime)
+            params['start_time'] = startTime;
+        if (endTime)
+            params['end_time'] = endTime;
+        const req = this.setRequest(targetPath, 'GET', params)
+        return await axios(req).then(r => r.data.result);
     }
 }
 
@@ -44,7 +39,7 @@ export class FTX {
 if (require.main === module) {
     (async () => {
         const ftx = new FTX('ETH-PERP', {})
-        const res = await ftx.orderbook('BTC-PERP',{ depth: 20 })
+        const res = await ftx.orderbook('BTC-PERP', 20)
         console.log('res :>> ', res);
     })()
 }
