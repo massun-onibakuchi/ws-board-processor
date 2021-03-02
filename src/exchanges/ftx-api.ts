@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 export class FTX {
     URLS = { REST: 'https://ftx.com/api' };
@@ -9,7 +9,7 @@ export class FTX {
         this.config = config;
     }
     setRequest = (targetPath: string, method: string, data = null) => {
-        const request = {};
+        const request: AxiosRequestConfig = {};
         if (method === 'GET') {
             const url = "".concat(this.URLS['REST'], targetPath);
             request['method'] = 'GET';
@@ -33,6 +33,11 @@ export class FTX {
         const req = this.setRequest(targetPath, 'GET', params)
         return await axios(req).then(r => r.data.result);
     }
+    futureStats = async (market = this.market) => {
+        const targetPath = "".concat('/futures/', market, '/stats')
+        const req = this.setRequest(targetPath, 'GET')
+        return await axios(req).then(r => r.data.result);
+    }
 }
 
 
@@ -41,5 +46,7 @@ if (require.main === module) {
         const ftx = new FTX('ETH-PERP', {})
         const res = await ftx.orderbook('BTC-PERP', 20)
         console.log('res :>> ', res);
+        const res2 = await ftx.futureStats('BTC-PERP')
+        console.log('res2 :>> ', res2);
     })()
 }

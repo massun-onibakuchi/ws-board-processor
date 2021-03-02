@@ -1,6 +1,7 @@
 import { BoardInterface, ResponeBook, BoardUpdater, ResponceMarkerOrder } from './update-orderbook';
 import { StreamRecord } from './stream-record';
 import { PathLike } from 'fs';
+import { ExchangeFactory, ExchangeREST } from './exchanges/exchanges-rest';
 
 export class BoardProcessor extends BoardUpdater {
     boardWidth = 100
@@ -14,8 +15,12 @@ export class BoardProcessor extends BoardUpdater {
     // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
     timer: NodeJS.Timeout;
     streamRecord: StreamRecord;
+    REST_APIS: ExchangeREST[];
     csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,open,high,low,close\n';
-    constructor(filePath: PathLike, interval = 10000, maxLength = 10) {
+    promise;
+    statsTimer: NodeJS.Timeout;
+    promise2: Array<Promise<any[]>>;
+    constructor(exchanges: string[], filePath: PathLike, interval = 10000, maxLength = 10) {
         super(null);
         console.log('[Info]:Set up...' +
             process.env.NODE_ENV +
@@ -31,6 +36,39 @@ export class BoardProcessor extends BoardUpdater {
         }
         this.timer = setInterval(() => this.update(), 2000);
         this.streamRecord = new StreamRecord(filePath, this.csvIndex);
+
+        this.REST_APIS = ExchangeFactory.exchangesREST(exchanges);
+        this.statsTimer = setInterval(() => this.promise2.push(this.futureStats()), this.interval);
+        // this.promise.push(new Promise(() => {
+        //     setTimeout(() => {
+        //         try {
+        //             return this.futureStats();
+        //         }
+        //         catch (e) {
+        //             console.log('e :>> ', e);
+        //             return null;
+        //         }
+        //     }, this.nextUpdate - this.interval);
+        // }))
+    }
+
+    public futureStats = async () => {
+        return Promise.all(
+            this.REST_APIS.map(exchange => {
+                exchange.futureStats().catch(e => e);
+            })
+        )
+        // return new Promise(() => {
+        //     setTimeout(() => {
+        //         try {
+        //             return this.REST_APIS.futureStats();
+        //         }
+        //         catch (e) {
+        //             console.log('e :>> ', e);
+        //             return null;
+        //         }
+        //     }, this.nextUpdate - this.interval);
+        // })
     }
     public boardAnalysis = (responce: ResponeBook) => {
         if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
@@ -158,5 +196,8 @@ export class BoardProcessor extends BoardUpdater {
         }
         this.diffBoard[this.diffBoard.length - 1].asks += diff.asks;
         this.diffBoard[this.diffBoard.length - 1].bids += diff.bids;
+    }
+    public futureStatsAnalysis() {
+
     }
 }

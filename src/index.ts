@@ -10,12 +10,13 @@ if (cpus().length < 2) {
     process.exit(1);
 }
 
+const EXCHANGE: string = process.env.EXCHANGE || config.get<string>('EXCHANGE');
 const MARKET: string = process.env.MARKET || config.get<string>('MARKET');
 const INTERVAL: number = parseInt(process.env.INTERVAL) || config.get<number>('INTERVAL');
 const MAX_RESERVE: number = config.get<number>('MAX_RESERVE');
 const filePath = `result_${MARKET}_${INTERVAL}_${new Date(Date.now()).toISOString().replace(/\....Z/, '')}.csv`;
 
-const logic = new BoardProcessor(filePath, INTERVAL, MAX_RESERVE);
+const logic = new BoardProcessor(EXCHANGE, filePath, INTERVAL, MAX_RESERVE);
 
 cluster.setupMaster({
     exec: path.join(process.cwd(), 'src/subscribe.ts'),
