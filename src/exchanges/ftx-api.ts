@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
 export class FTX {
+    id = 'ftx';
     URLS = { REST: 'https://ftx.com/api' };
     market: string
     config
@@ -44,8 +45,8 @@ export class FTX {
 if (require.main === module) {
     (async () => {
         const ftx = new FTX('ETH-PERP', {})
-        const res = await ftx.orderbook('BTC-PERP', 20)
-        console.log('res :>> ', res);
+        // const res = await ftx.orderbook('BTC-PERP', 20)
+        // console.log('res :>> ', res);
         const res2 = await ftx.futureStats('BTC-PERP')
         console.log('res2 :>> ', res2);
     })()

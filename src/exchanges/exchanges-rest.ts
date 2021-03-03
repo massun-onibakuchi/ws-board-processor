@@ -1,3 +1,4 @@
+import { ResponceFutureStats } from '../update-orderbook';
 import { FTX } from './ftx-api';
 
 const ExchangesREST = {
@@ -8,7 +9,8 @@ const ExchangesWS = {
 }
 
 export interface ExchangeREST {
-    futureStats: () => Promise<any>
+    id: string
+    futureStats: (market: string) => Promise<ResponceFutureStats>
 }
 export class ExchangeFactory {
     static futureStats() {
@@ -22,19 +24,12 @@ export class ExchangeFactory {
         }
     }
     static exchangesREST(ids: string[]) {
-        const instances = {};
         const exchanges = []
         for (const id of ids) {
-            instances[id] = new ExchangesREST[id.toLowerCase()]();
-            exchanges.push(new ExchangesREST[id.toLowerCase()]())
+            exchanges.push(new ExchangesREST[id.toLowerCase()](id))
         }
-        // return instances;
         return exchanges
     }
-    static exchangeREST(id: string): ExchangeREST {
-        return new ExchangesREST[id.toLowerCase()]()
-    }
-
     static exchangeWS(id: string) {
         return new ExchangesWS[id.toLowerCase()]()
     }

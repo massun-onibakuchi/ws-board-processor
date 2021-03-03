@@ -1,26 +1,28 @@
-import { BoardInterface, ResponeBook, BoardUpdater, ResponceMarkerOrder } from './update-orderbook';
+import { BoardInterface, ResponeBook, BoardUpdater, ResponceMarkerOrder, ResponceFutureStats } from './update-orderbook';
 import { StreamRecord } from './stream-record';
 import { PathLike } from 'fs';
 import { ExchangeFactory, ExchangeREST } from './exchanges/exchanges-rest';
 
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 export class BoardProcessor extends BoardUpdater {
     boardWidth = 100
-    maxLength
+    maxLength;
     interval;
+    market: string;
     nextUpdate = Date.now();
     depths = [{ timestamp: this.nextUpdate, bids: 0, asks: 0 }]
     marketOrders = [{ timestamp: this.nextUpdate, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 }]
     ohlcvs = [{ timestamp: this.nextUpdate, close: 0, open: 0, high: 0, low: 0 }];
     diffBoard = [{ timestamp: this.nextUpdate, asks: 0, bids: 0 }];
+    ois = [{}];
     // liquidations = [{ timestamp: this.nextUpdate, buy: 0, sell: 0 }];
     timer: NodeJS.Timeout;
     streamRecord: StreamRecord;
-    REST_APIS: ExchangeREST[];
-    csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,open,high,low,close\n';
-    promise;
-    statsTimer: NodeJS.Timeout;
-    promise2: Array<Promise<any[]>>;
-    constructor(exchanges: string[], filePath: PathLike, interval = 10000, maxLength = 10) {
+    exchangeAPIs: ExchangeREST[];
+    csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,Open,High,Low,Close';
+    statsPromise: Promise<{ id: string; responce: {} | ResponceFutureStats; }[]>
+    constructor(exchanges: string[], market: string, filePath: PathLike, interval = 10000, maxLength = 10) {
         super(null);
         console.log('[Info]:Set up...' +
             process.env.NODE_ENV +
@@ -28,7 +30,10 @@ export class BoardProcessor extends BoardUpdater {
             '\ncsv file path: ' + filePath
         );
         this.interval = interval;
+        this.market = market;
         this.maxLength = maxLength > 3 ? maxLength : 10;
+        let oiLabel = exchanges.reduce((prev, current) => prev.concat(",", current.toUpperCase(), "-OI"), "")
+        this.csvIndex = this.csvIndex + oiLabel + '\n';
         this.nextUpdate = Date.now() + 60000 - (Date.now() % 60000) + interval;
         if (this.nextUpdate < Date.now()) {
             console.log('[ERROR]: next_update_time < now.');
@@ -36,39 +41,32 @@ export class BoardProcessor extends BoardUpdater {
         }
         this.timer = setInterval(() => this.update(), 2000);
         this.streamRecord = new StreamRecord(filePath, this.csvIndex);
-
-        this.REST_APIS = ExchangeFactory.exchangesREST(exchanges);
-        this.statsTimer = setInterval(() => this.promise2.push(this.futureStats()), this.interval);
-        // this.promise.push(new Promise(() => {
-        //     setTimeout(() => {
-        //         try {
-        //             return this.futureStats();
-        //         }
-        //         catch (e) {
-        //             console.log('e :>> ', e);
-        //             return null;
-        //         }
-        //     }, this.nextUpdate - this.interval);
-        // }))
+        this.exchangeAPIs = ExchangeFactory.exchangesREST(exchanges);
+        this.statsPromise = this.futureStats(this.market);
     }
-
-    public futureStats = async () => {
+    private updateFutureStatsData(timestamp: number, responces: { id: string, responce: {} | ResponceFutureStats }[]) {
+        const oi = { timestamp: timestamp };
+        for (const res of responces) {
+            if ('openInterest' in res['responce'])
+                oi[res.id] = res['responce']['openInterest'];
+            else oi[res.id] = 0;
+        }
+        this.ois.push(oi);
+    }
+    private futureStats = (market: string) => {
         return Promise.all(
-            this.REST_APIS.map(exchange => {
-                exchange.futureStats().catch(e => e);
-            })
+            this.exchangeAPIs.map(exchange => this.futureStatsTimeout(exchange, market))
         )
-        // return new Promise(() => {
-        //     setTimeout(() => {
-        //         try {
-        //             return this.REST_APIS.futureStats();
-        //         }
-        //         catch (e) {
-        //             console.log('e :>> ', e);
-        //             return null;
-        //         }
-        //     }, this.nextUpdate - this.interval);
-        // })
+    }
+    private futureStatsTimeout = async (exchange: ExchangeREST, market): Promise<{ id: string; responce: ResponceFutureStats | {}; }> => {
+        await wait(this.nextUpdate - Date.now() - 1000);
+        try {
+            const res = await exchange.futureStats(market);
+            return { id: exchange.id, responce: res };
+        } catch (error) {
+            console.log('error :>> ', error);
+            return { id: exchange.id, responce: {} }
+        }
     }
     public boardAnalysis = (responce: ResponeBook) => {
         if (!responce) return console.log('[WARN] at boardAnaysis:RESPONCE_IS_INVALID', responce);
@@ -82,26 +80,38 @@ export class BoardProcessor extends BoardUpdater {
         if (!responce) return console.log('[WARN] at marketOrderAnalysis:RESPONCE_IS_INVALID', responce);
         setImmediate(() => this.calculateMarketOrder(responce));
     }
-    public update() {
+    public async update() {
         if (this.nextUpdate > Date.now()) return
         console.log("-------------------------");
-        const lasttime = this.nextUpdate;
+        const thisTime = this.nextUpdate;
         this.nextUpdate += this.interval;
 
+        /** reserve futureStats data and call `futurestats` */
+        const stats = await this.statsPromise;
+        this.statsPromise = this.futureStats(this.market);
+
+        /** updates OHLCV and  create the next OHLCV*/
         const bestPricesLength = this.ohlcvs.length;
         const bestPrice = (Math.max(...this.board.bids.keys()) + Math.min(...this.board.asks.keys())) / 2;
-        this.ohlcvs[bestPricesLength - 1].close = bestPrice
+        this.ohlcvs[bestPricesLength - 1].close = bestPrice;
 
-        this.ohlcvs.push({ timestamp: lasttime, open: bestPrice, close: 0, high: bestPrice, low: 0 });
-        this.depths.push({ timestamp: lasttime, bids: 0, asks: 0 });
-        this.marketOrders.push({ timestamp: lasttime, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 })
-        this.diffBoard.push({ timestamp: lasttime, asks: 0, bids: 0 })
+        /** update aggregated data */
+        this.ohlcvs.push({ timestamp: thisTime, open: bestPrice, close: 0, high: bestPrice, low: 0 });
+        this.depths.push({ timestamp: thisTime, bids: 0, asks: 0 });
+        this.marketOrders.push({ timestamp: thisTime, buy: 0, sell: 0, liqBuy: 0, liqSell: 0 });
+        this.diffBoard.push({ timestamp: thisTime, asks: 0, bids: 0 });
+        this.updateFutureStatsData(thisTime - this.interval, stats);
         // this.liquidations.push({ timestamp: lasttime, buy: 0, sell: 0 })
 
         const length = this.depths.length;
-        if (length > 2) {
+        if (length > 3) {
             console.log('[Info]:  Writing result...');
-            const chunk = this.nextUpdate + ',' +
+            // 更新間隔が違うので`this.oi[length-1]が正しい
+            const oiString = Object.values<number>(this.ois[this.ois.length - 1]).reduce((prev, current, i) => {
+                if (i > 0) return prev.concat(",", current.toString())
+                else return prev;
+            }, "");
+            const chunk = this.depths[length - 2].timestamp + ',' +
                 this.depths[length - 2].asks + ',' +
                 this.depths[length - 2].bids + ',' +
                 this.diffBoard[length - 2].asks + ',' +
@@ -113,7 +123,8 @@ export class BoardProcessor extends BoardUpdater {
                 this.ohlcvs[length - 2].open + ',' +
                 this.ohlcvs[length - 2].high + ',' +
                 this.ohlcvs[length - 2].low + ',' +
-                this.ohlcvs[length - 2].close + '\n';
+                this.ohlcvs[length - 2].close +
+                oiString + '\n';
             this.streamRecord.write(chunk);
         }
         /** leave the last `this.maxLength` element */
@@ -123,12 +134,14 @@ export class BoardProcessor extends BoardUpdater {
             this.diffBoard = this.diffBoard.splice(-this.maxLength);
             this.marketOrders = this.marketOrders.splice(-this.maxLength);
             this.ohlcvs = this.ohlcvs.splice(-this.maxLength);
+            this.ois = this.ois.splice(-this.maxLength);
             // this.liquidations.splice(0, this.maxLength - this.liquidations.length)
         }
         console.log('this.diffBoard :>> ', this.diffBoard);
         console.log('this.depths :>> ', this.depths);
         console.log('this.marketOrders :>> ', this.marketOrders);
         console.log('this.ohlcvs :>> ', this.ohlcvs);
+        console.log('this.ois :>> ', this.ois);
     }
 
     public recordPrice(board: BoardInterface) {
@@ -197,7 +210,5 @@ export class BoardProcessor extends BoardUpdater {
         this.diffBoard[this.diffBoard.length - 1].asks += diff.asks;
         this.diffBoard[this.diffBoard.length - 1].bids += diff.bids;
     }
-    public futureStatsAnalysis() {
 
-    }
 }

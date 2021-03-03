@@ -1,5 +1,7 @@
 {
-    "EXCHANGE":"FTX",
+    "EXCHANGES": [
+        "FTX"
+    ],
     "MARKET": "BTC-PERP",
     "INTERVAL": 10000,
     "MAX_RESERVE": 10,
