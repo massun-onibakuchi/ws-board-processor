@@ -1,8 +1,10 @@
 import { ResponceFutureStats } from '../update-orderbook';
-import { FTX } from './ftx-api';
+import { FTX } from './ftx';
+import { Bybit } from './bybit';
 
 const ExchangesREST = {
-    'ftx': FTX
+    'ftx': FTX,
+    'bybit': Bybit
 }
 const ExchangesWS = {
     'ftx': null
@@ -12,6 +14,7 @@ export interface ExchangeREST {
     id: string
     futureStats: (market: string) => Promise<ResponceFutureStats>
 }
+
 export class ExchangeFactory {
     static futureStats() {
         throw new Error('Method not implemented.');

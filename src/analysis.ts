@@ -22,6 +22,7 @@ export class BoardProcessor extends BoardUpdater {
     exchangeAPIs: ExchangeREST[];
     csvIndex = 'timestamp,asksSize,bidsSize,asksSupply,bidsSupply,buyTake,sellTake,liqBuy,liqSell,Open,High,Low,Close';
     statsPromise: Promise<{ id: string; responce: {} | ResponceFutureStats; }[]>
+    category: string = 'future';
     constructor(exchanges: string[], market: string, filePath: PathLike, interval = 10000, maxLength = 10) {
         super(null);
         console.log('[Info]:Set up...' +
@@ -54,9 +55,10 @@ export class BoardProcessor extends BoardUpdater {
         this.ois.push(oi);
     }
     private futureStats = (market: string) => {
-        return Promise.all(
-            this.exchangeAPIs.map(exchange => this.futureStatsTimeout(exchange, market))
-        )
+        if (this.category.toLowerCase() === 'future')
+            return Promise.all(
+                this.exchangeAPIs.map(exchange => this.futureStatsTimeout(exchange, market))
+            )
     }
     private futureStatsTimeout = async (exchange: ExchangeREST, market): Promise<{ id: string; responce: ResponceFutureStats | {}; }> => {
         await wait(this.nextUpdate - Date.now() - 1000);

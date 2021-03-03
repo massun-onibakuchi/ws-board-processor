@@ -3,6 +3,7 @@
         "FTX"
     ],
     "MARKET": "BTC-PERP",
+    "CATEGORY":"Future",
     "INTERVAL": 10000,
     "MAX_RESERVE": 10,
     "VERVOSE": false
