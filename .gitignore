@@ -2,4 +2,5 @@ node_modules
 dist/
 .env
 **.csv
-src/scraping/**
+src/scraping/
+src/develop/
