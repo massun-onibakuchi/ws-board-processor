@@ -16,16 +16,6 @@ export interface ExchangeREST {
 }
 
 export class ExchangeFactory {
-    static futureStats() {
-        throw new Error('Method not implemented.');
-    }
-    static REST_INSTANCES = [];
-
-    static initExchangesREST(exchanges: string[]) {
-        for (const id of exchanges) {
-            this.REST_INSTANCES.push(new ExchangesREST[id.toLowerCase()]())
-        }
-    }
     static exchangesREST(ids: string[]) {
         const exchanges = []
         for (const id of ids) {

@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { ResponceFutureStats } from '../update-orderbook';
 
 export class Bybit {
     id = 'bybit';
@@ -13,12 +14,23 @@ export class Bybit {
         this.market = market;
         this.config = config;
     }
+    reformatResponce = (type, responce) => {
+        if (type === 'futureStats') {
+            return {
+                nextFundingRate: responce['predicted_funding_rate'],
+                openInterest: responce['open_interest'],
+                volume: responce['volume_24h'],
+            }
+        }
+    }
     convertSymbol = (input: string) => {
         if (input.includes('/USD')) {
             throw new Error("[INVALID_SYMBOL]: symbol" + input);
         }
-        if (input.includes('-PERP'))
+        if (input.includes('-PERP')){
+            console.log('[Info]: Replaced -PERP to USDT');
             return input.replace('-PERP', 'USDT');
+        }
         if (input.includes('USD'))
             return input;
         else throw new Error("[INVALID_SYMBOL]: symbol" + input);
@@ -48,11 +60,12 @@ export class Bybit {
     //     const req = this.setRequest(targetPath, 'GET', params)
     //     return await axios(req).then(r => r.data.result);
     // }
-    futureStats = async (market: string) => {
+    futureStats = async (market: string): Promise<ResponceFutureStats> => {
         //  /v2/public/tickers
         const targetPath = '/v2/public/tickers'
         const req = this.setRequest(targetPath, 'GET', { symbol: this.convertSymbol(market) })
-        return await axios(req).then(r => r.data.result);
+        const res = await axios(req);
+        return this.reformatResponce('futureStats', res.data.result[0]);
     }
 }
 
