@@ -24,12 +24,12 @@ export class Bybit {
         }
     }
     convertSymbol = (input: string) => {
-        if (input.includes('/USD')) {
-            throw new Error("[INVALID_SYMBOL]: symbol" + input);
+        if (input.includes('/')) {
+            throw new Error("[INVALID_SYMBOL]:SPOT symbol" + input);
         }
         if (input.includes('-PERP')){
-            console.log('[Info]: Replaced -PERP to USDT');
-            return input.replace('-PERP', 'USDT');
+            console.log('[Info]: Replaced -PERP to USD');
+            return input.replace('-PERP', 'USD');
         }
         if (input.includes('USD'))
             return input;
