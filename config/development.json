@@ -1,7 +1,8 @@
 {
     "EXCHANGES": [
         "FTX",
-        "BYBIT"
+        "BYBIT",
+        "BINANCE"
     ],
     "MARKET": "BTC-PERP",
     "CATEGORY":"Future",

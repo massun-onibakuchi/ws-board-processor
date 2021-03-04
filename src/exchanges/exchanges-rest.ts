@@ -1,10 +1,12 @@
 import { ResponceFutureStats } from '../update-orderbook';
 import { FTX } from './ftx';
 import { Bybit } from './bybit';
+import { Binance } from './binance';
 
 const ExchangesREST = {
     'ftx': FTX,
-    'bybit': Bybit
+    'bybit': Bybit,
+    'binance': Binance
 }
 const ExchangesWS = {
     'ftx': null
